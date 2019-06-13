@@ -103,4 +103,15 @@ montreal <- read_sf(dsn = "data", layer = "montreal")%>%
   select(MUNID, CODEID, NOM, geometry)
 
 
+## Find multilistings 
+
+property_hosts <- property %>% count(Airbnb_HID)
+hosts <- property_hosts
+rm(property_hosts)
+
+multihosts <- hosts %>% filter(n >= 10)
+
+multiproperty <- property %>% filter(Airbnb_HID %in% multihosts$Airbnb_HID)
+
+
 
