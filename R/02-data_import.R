@@ -14,12 +14,13 @@ property <-
     `Last Scraped Date` = col_date(format = ""),
     Latitude = col_double(),
     Longitude = col_double(),
+    `Annual Revenue LTM (USD)` = col_double(),
     `Airbnb Property ID` = col_double(),
     `Airbnb Host ID` = col_double(),
     `HomeAway Property ID` = col_character(),
     `HomeAway Property Manager` = col_character())) %>% 
   set_names(c("Property_ID", "Listing_Title", "Property_Type", "Listing_Type",
-              "Created", "Scraped", "Latitude", "Longitude", "Airbnb_PID",
+              "Created", "Scraped", "Latitude", "Longitude", "LTM_Revenue", "Airbnb_PID",
               "Airbnb_HID", "HomeAway_PID", "HomeAway_HID")) %>% 
   arrange(Property_ID) %>% 
   st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>%
@@ -105,9 +106,7 @@ montreal <- read_sf(dsn = "data", layer = "montreal")%>%
 
 ## Find multilistings 
 
-property_hosts <- property %>% count(Airbnb_HID)
-hosts <- property_hosts
-rm(property_hosts)
+hosts <- property %>% count(Airbnb_HID)
 
 multihosts <- hosts %>% filter(n >= 10)
 
