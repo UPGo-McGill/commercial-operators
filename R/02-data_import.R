@@ -75,11 +75,17 @@ daily <-
   filter(!is.na(Status)) %>%
   arrange(Property_ID, Date)
 
-# Filter to last 12 months and add raffle results
+## Import Montreal Shapefile
+
+montreal <- read_sf(dsn = "data", layer = "montreal")%>%
+  st_transform(32618) %>% 
+  select(MUNID, CODEID, NOM, geometry)
+
+# Filter to last available week and add raffle results
 
 property <-
   property %>% 
-  filter(Scraped >= "2018-05-01",
+  filter(Scraped >= "2019-04-24",
          Created <= "2019-04-30") %>% 
   st_join(st_buffer(montreal["geometry"], 200),
           join = st_within, left = FALSE) %>% 
@@ -96,21 +102,57 @@ daily <- inner_join(daily, st_drop_geometry(property)) %>%
   select(Property_ID, Date, Status, Price, Airbnb_PID, HomeAway_PID, Airbnb_HID,
          HomeAway_HID, Listing_Type)
 
+## Find FREH
 
-## Import Montreal Shapefile
-
-montreal <- read_sf(dsn = "data", layer = "montreal")%>%
-  st_transform(32618) %>% 
-  select(MUNID, CODEID, NOM, geometry)
-
-
-## Find multilistings 
-
-hosts <- property %>% count(Airbnb_HID)
-
-multihosts <- hosts %>% filter(n >= 10)
-
-multiproperty <- property %>% filter(Airbnb_HID %in% multihosts$Airbnb_HID)
+property <- 
+  daily %>%
+  group_by(Property_ID) %>% 
+  summarize(
+    n_reserved = sum(Status == "R"),
+    n_available = sum(Status == "A" | Status == "R"),
+    revenue = sum((Status == "R") * Price),
+    FREH = if_else(
+      first(Listing_Type) == "Entire home/apt" & n_reserved >= 90 &
+        n_available >= 183, TRUE, FALSE)) %>% 
+  inner_join(property, .)
 
 
+ ## Find multilistings 
+
+daily <- strr_multilistings(daily, listing_type = Listing_Type,
+                            host_ID = Airbnb_HID, date = Date)
+
+property <- 
+  daily %>%
+  group_by(Property_ID) %>% 
+  summarize(ML = as.logical(ceiling(mean(ML)))) %>% 
+  inner_join(property, .)
+
+
+## Filtering to populations of interest
+
+FREH <- 
+  property %>% 
+  filter(FREH == TRUE)
+
+commercial <- 
+  property %>% 
+  filter(
+    FREH == TRUE &
+         ML == TRUE)
+
+
+## Random samples
+
+FREHsample1 <- 
+  FREH %>% 
+  sample_n(1000)
+
+write_csv(FREHsample1, path = "data/FREHsample1.csv")
+
+commercialSample1 <- 
+  commercial %>% 
+  sample_n(1000)
+
+write_csv(commercialSample1, path = "data/commercialSample1.csv")
 
