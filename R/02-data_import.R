@@ -85,7 +85,7 @@ montreal <- read_sf(dsn = "data", layer = "montreal")%>%
 
 property <-
   property %>% 
-  filter(Scraped >= "2019-04-24",
+  filter(Scraped >= "2018-05-01",
          Created <= "2019-04-30") %>% 
   st_join(st_buffer(montreal["geometry"], 200),
           join = st_within, left = FALSE) %>% 
@@ -140,19 +140,3 @@ commercial <-
   filter(
     FREH == TRUE &
          ML == TRUE)
-
-
-## Random samples
-
-FREHsample1 <- 
-  FREH %>% 
-  sample_n(1000)
-
-write_csv(FREHsample1, path = "data/FREHsample1.csv")
-
-commercialSample1 <- 
-  commercial %>% 
-  sample_n(1000)
-
-write_csv(commercialSample1, path = "data/commercialSample1.csv")
-
