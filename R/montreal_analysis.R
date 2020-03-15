@@ -55,9 +55,6 @@ GH <-
 
 save(property, daily, host, FREH, GH, file = "Montreal_data.Rdata")
 
-
-### ANALYSIS ###################################################################
-
 load("Data/Montreal_data.Rdata")
 
 # Set up dates
@@ -65,10 +62,12 @@ start_date <- "2019-01-01"
 end_date <- "2019-12-31"
 
 # Exchange rate (average over last twelve months)
-#exchange_rate <- mean(1.3037, 1.3010, 1.3200,
-                      #1.3432, 1.3301, 1.3206, 
-                      #1.3368, 1.3378, 1.3438,
-                      #1.3188, 1.3046, 1.3316)
+exchange_rate <- mean(1.3037, 1.3010, 1.3200,
+                      1.3432, 1.3301, 1.3206, 
+                      1.3368, 1.3378, 1.3438,
+                      1.3188, 1.3046, 1.3316)
+
+### ANALYSIS ###################################################################
 
 ## Create last twelve months property file
 
@@ -81,14 +80,11 @@ LTM_property <- property %>%
 active_listings <- 
   daily %>% 
   filter(housing == TRUE) %>% 
-  count(date)
-
-active_listings <- 
-  active_listings %>% 
+  count(date)%>% 
   arrange(desc(date))
 
 ## Active listings from property file
-# All listings
+# All housing listings
 nrow(filter(property, created <= end_date, scraped >= end_date, housing == TRUE))
 
 # Housing listings over the last twelve months
@@ -115,52 +111,6 @@ LTM_property %>%
   nrow()/
   length(unique(LTM_property$host_ID))
 
-# LTM revenue
-#sum(LTM_property$revenue, na.rm = TRUE)
-
-# LTM revenue by property type
-#filter(LTM_property, listing_type == "Entire home/apt") %>% 
-  #select(revenue) %>% 
-  #st_drop_geometry() %>% 
-  #sum(na.rm = TRUE) /
-  #sum(LTM_property$revenue, na.rm = TRUE)
-
-## YOY growth rates
-date_yoy_2019 <- "2018-12-31"
-date_yoy_2018 <- "2017-12-31"
-date_yoy_2017 <- "2016-12-31"
-date_yoy_2016 <- "2015-12-31"
-date_yoy_2015 <- "2014-12-31"
-
-# 2019
-nrow(filter(property, created <= end_date, scraped >= end_date,
-            housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2019, scraped >= date_yoy_2019,
-              housing == TRUE))
-
-# 2018
-nrow(filter(property, created <= date_yoy_2019, scraped >= date_yoy_2019,
-            housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2018, scraped >= date_yoy_2018,
-              housing == TRUE))
-
-# 2017
-nrow(filter(property, created <= date_yoy_2018, scraped >= date_yoy_2018,
-            housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2017, scraped >= date_yoy_2017,
-              housing == TRUE))
-
-# 2016
-nrow(filter(property, created <= date_yoy_2017, scraped >= date_yoy_2017,
-            housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2016, scraped >= date_yoy_2016,
-              housing == TRUE))
-
-# 2015
-nrow(filter(property, created <= date_yoy_2016, scraped >= date_yoy_2016,
-            housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2015, scraped >= date_yoy_2015,
-              housing == TRUE))
 
 ### Which STR platforms are used in Montreal? ###################################
 
@@ -175,7 +125,70 @@ nrow(filter(LTM_property, !is.na(ha_property), !is.na(ab_property)))
 
 nrow(LTM_property)
 
-#REVIEWED UP TO THIS POINT####
+
+### Which boroughs have the most listings? ####################################
+
+nrow(filter(LTM_property, created <= "2019-07-01", scraped >= "2019-07-01", neighbourhood == "Ville-Marie"))
+
+nrow(filter(LTM_property, created <= "2019-07-01", scraped >= "2019-07-01", neighbourhood == "Le Plateau-Mont-Royal"))
+
+
+### How many were FREHs? ######################################################
+
+nrow(filter(FREH, date == "2019-07-01", FREH == TRUE))
+
+### REVENUE ###################################################################
+
+# LTM revenue
+#sum(LTM_property$revenue, na.rm = TRUE)
+
+# LTM revenue by property type
+#filter(LTM_property, listing_type == "Entire home/apt") %>% 
+  #select(revenue) %>% 
+  #st_drop_geometry() %>% 
+  #sum(na.rm = TRUE) /
+  #sum(LTM_property$revenue, na.rm = TRUE)
+
+### GROWTH OVER TIME #########################################################
+
+# Set dates
+date_yoy_2019 <- "2018-12-31"
+date_yoy_2018 <- "2017-12-31"
+date_yoy_2017 <- "2016-12-31"
+date_yoy_2016 <- "2015-12-31"
+date_yoy_2015 <- "2014-12-31"
+
+# 2019 YOY Growth
+nrow(filter(property, created <= end_date, scraped >= end_date,
+            housing == TRUE)) / 
+  nrow(filter(property, created <= date_yoy_2019, scraped >= date_yoy_2019,
+              housing == TRUE))
+
+# 2018 YOY Growth
+nrow(filter(property, created <= date_yoy_2019, scraped >= date_yoy_2019,
+            housing == TRUE)) / 
+  nrow(filter(property, created <= date_yoy_2018, scraped >= date_yoy_2018,
+              housing == TRUE))
+
+# 2017 YOY Growth
+nrow(filter(property, created <= date_yoy_2018, scraped >= date_yoy_2018,
+            housing == TRUE)) / 
+  nrow(filter(property, created <= date_yoy_2017, scraped >= date_yoy_2017,
+              housing == TRUE))
+
+# 2016 YOY Growth
+nrow(filter(property, created <= date_yoy_2017, scraped >= date_yoy_2017,
+            housing == TRUE)) / 
+  nrow(filter(property, created <= date_yoy_2016, scraped >= date_yoy_2016,
+              housing == TRUE))
+
+# 2015 YOY Growth
+nrow(filter(property, created <= date_yoy_2016, scraped >= date_yoy_2016,
+            housing == TRUE)) / 
+  nrow(filter(property, created <= date_yoy_2015, scraped >= date_yoy_2015,
+              housing == TRUE))
+
+
 ### Listing type prevalence ####################################################
 
 property %>% 
