@@ -1,6 +1,10 @@
 ### 3 - MONTREAL DATA ANALYSIS #################################################
 
+source("R/01-helper_functions.R")
+source("R/02-data_import.R")
 load("Data/Montreal_data.Rdata")
+
+### Prepare data ###############################################################
 
 # Set up dates
 start_date <- "2019-01-01"
@@ -12,9 +16,15 @@ exchange_rate <- mean(1.3037, 1.3010, 1.3200,
                       1.3368, 1.3378, 1.3438,
                       1.3188, 1.3046, 1.3316)
 
-### ANALYSIS ###################################################################
+# Add revenue column
+property <- 
+  daily %>% 
+  filter(date >= "2019-01-01", status == "R") %>% 
+  group_by(property_ID) %>% 
+  summarize(revenue = sum(price)) %>% 
+  left_join(property, .)
 
-## Create last twelve months property file
+# Create last twelve months property file
 
 LTM_property <- property %>% 
   filter(created <= end_date, scraped >= start_date, housing == TRUE)
@@ -29,7 +39,7 @@ active_listings <-
   arrange(desc(date))
 
 ## Active listings from property file
-# All housing listings
+# All housing listings on Dec 31, 2019
 nrow(filter(property, created <= end_date, scraped >= end_date, housing == TRUE))
 
 # Housing listings over the last twelve months
@@ -82,19 +92,8 @@ nrow(filter(LTM_property, created <= "2019-07-01", scraped >= "2019-07-01", neig
 
 nrow(filter(FREH, date == "2019-07-01", FREH == TRUE))
 
-### REVENUE ###################################################################
 
-# LTM revenue
-#sum(LTM_property$revenue, na.rm = TRUE)
-
-# LTM revenue by property type
-#filter(LTM_property, listing_type == "Entire home/apt") %>% 
-#select(revenue) %>% 
-#st_drop_geometry() %>% 
-#sum(na.rm = TRUE) /
-#sum(LTM_property$revenue, na.rm = TRUE)
-
-### GROWTH OVER TIME #########################################################
+### Growth over time #########################################################
 
 # Set dates
 date_yoy_2019 <- "2018-12-31"
@@ -102,6 +101,24 @@ date_yoy_2018 <- "2017-12-31"
 date_yoy_2017 <- "2016-12-31"
 date_yoy_2016 <- "2015-12-31"
 date_yoy_2015 <- "2014-12-31"
+
+# 2015-2019 Growth
+nrow(filter(property, created <= end_date, scraped >= end_date,
+            housing == TRUE)) / 
+  nrow(filter(property, created <= date_yoy_2015, scraped >= date_yoy_2015,
+              housing == TRUE))
+
+# 2015-2019 EH Growth
+
+nrow(filter(property, created <= end_date, scraped >= end_date,
+            listing_type == "Entire home/apt",  housing == TRUE)) / 
+  nrow(filter(property, created <= date_yoy_2015, scraped >= date_yoy_2015,
+              listing_type == "Entire home/apt", housing == TRUE))
+
+# 2016-2019 FREH Growth
+
+#nrow(filter(FREH, date == end_date, FREH == TRUE)) /
+  #nrow(filter(FREH, date == "2016-01-01", FREH == TRUE))
 
 # 2019 YOY Growth
 nrow(filter(property, created <= end_date, scraped >= end_date,
@@ -139,7 +156,6 @@ nrow(filter(property, created <= date_yoy_2016, scraped >= date_yoy_2016,
 property %>% 
   filter(housing == TRUE) %>% 
   rename(`Listing type` = listing_type) %>% 
-  st_drop_geometry() %>% 
   filter(created <= end_date, scraped >= end_date) %>% 
   group_by(`Listing type`) %>% 
   summarize(`Number of listings` = n(),
@@ -170,6 +186,15 @@ property %>%
   mutate(percentage = n / sum(n))
 
 ### Revenue distribution and commercial operators ##############################
+
+# LTM revenue
+sum(LTM_property$revenue, na.rm = TRUE)
+
+# LTM revenue by property type
+filter(LTM_property, listing_type == "Entire home/apt") %>% 
+  select(revenue) %>% 
+  sum(na.rm = TRUE) / sum(LTM_property$revenue, na.rm = TRUE)
+
 
 ## Host revenue percentiles
 
@@ -203,7 +228,8 @@ LTM_property %>%
 LTM_property %>% 
   group_by(host_ID) %>% 
   summarise(host_rev = sum(revenue)) %>% 
-  filter(host_rev>0)
+  filter(host_rev>0) %>% 
+  arrange(desc(host_rev))
 
 
 ## Multilistings
@@ -211,8 +237,8 @@ LTM_property %>%
 ML_table <- 
   daily %>% 
   group_by(date) %>% 
-  summarize(Listings = mean(ML),
-            Revenue = sum(price * (status == "R") * ML * exchange_rate, na.rm = TRUE) / 
+  summarize(Listings = mean(multi),
+            Revenue = sum(price * (status == "R") * multi * exchange_rate, na.rm = TRUE) / 
               sum(price * (status == "R") * exchange_rate, na.rm = TRUE)) %>% 
   gather(Listings, Revenue, key = `Multilisting percentage`, value = Value)
 
@@ -223,13 +249,13 @@ ML_table %>%
 daily %>% 
   filter(listing_type == "Entire home/apt") %>% 
   group_by(date) %>% 
-  summarize(Listings = sum(ML)) %>% 
+  summarize(Listings = sum(multi)) %>% 
   filter(date == end_date)
 
 ### Housing loss ###############################################################
 
 FREH %>% 
-  filter(date == end_date) %>% 
+  filter(date == end_date, FREH == T) %>% 
   count()
 
 FREH %>% 
@@ -237,8 +263,8 @@ FREH %>%
   ggplot() +
   geom_line(aes(date, n), colour = "black", size = 1) +
   theme_minimal() +
-  scale_y_continuous(name = NULL, label = comma) +
-  ggtitle("FREH listings in Halifax Regional Municipality")
+  scale_y_continuous(name = NULL) +
+  ggtitle("FREH listings in Montreal")
 
 GH %>% 
   st_drop_geometry() %>% 
@@ -247,8 +273,8 @@ GH %>%
   ggplot() +
   geom_line(aes(date, GH_units), colour = "black", size = 1) +
   theme_minimal() +
-  scale_y_continuous(name = NULL, label = comma) +
-  ggtitle("Units converted to ghost hostels in Halifax Regional Municipality")
+  scale_y_continuous(name = NULL) +
+  ggtitle("Units converted to ghost hostels in Montreal")
 
 GH_total <- 
   GH %>% 
@@ -256,7 +282,8 @@ GH_total <-
   group_by(date) %>% 
   summarize(GH_units = sum(housing_units)) %>% 
   pull(GH_units) %>% 
-  rollmean(365, align = "right") 
+  rollmean(365, align = "right") %>% 
+  view()
 
 
 GH_total <- GH_total[(length(GH_total) + 1 - n_groups(FREH %>% group_by(date))):length(GH_total)]
@@ -274,7 +301,7 @@ sum(filter(housing_loss, date == end_date)$`Housing units`)
 
 # YOY increase
 sum(filter(housing_loss, date == end_date)$`Housing units`) /
-  sum(filter(housing_loss, date == date_yoy)$`Housing units`)
+  sum(filter(housing_loss, date == date_yoy_2018)$`Housing units`)
 
 
 ## Relate housing loss to rental vacancy rate
@@ -564,146 +591,6 @@ airbnb_neighbourhoods %>%
   arrange(desc(housing_loss_yoy)) %>% 
   slice(1:10) %>% 
   select(name, housing_loss_yoy)
-
-## Urban/rural comparison ########################
-areas <- c("halifax", "dartmouth", "other_urban", "rural")
-
-halifax <- c("H_1","H_2", "H_3", "H_4", "H_11", "H_6", "H_5",
-             "H_8", "H_9", "H_10", "H_12", "H_7")
-dartmouth <- c("D_5", "D_4", "D_3", "D_6", "D_1","D_7",
-               "D_2")
-other_urban <- c("B_1","C_15", "C_18", "C_21", "C_16",
-                 "C_22", "C_20", "C_17", "C_14")
-
-property <- property %>% 
-  mutate(halifax = neighbourhood%in%halifax,
-         dartmouth = neighbourhood%in%dartmouth,
-         other_urban = neighbourhood%in%other_urban)
-
-property <- property %>% 
-  mutate(urban_rural = ifelse(halifax == TRUE, "halifax",
-                              ifelse(dartmouth == TRUE, "dartmouth",
-                                     ifelse(other_urban == TRUE, "other_urban", 
-                                            "rural"))))
-neighbourhoods <- neighbourhoods %>% 
-  mutate(halifax = neighbourhood%in%halifax,
-         dartmouth = neighbourhood%in%dartmouth,
-         other_urban = neighbourhood%in%other_urban)
-
-neighbourhoods <- neighbourhoods %>% 
-  mutate(urban_rural = ifelse(halifax == TRUE, "halifax",
-                              ifelse(dartmouth == TRUE, "dartmouth",
-                                     ifelse(other_urban == TRUE, "other_urban", 
-                                            "rural"))))
-
-
-urban_rural <- tibble(area = character(0), active_listings = numeric(0), 
-                      active_listings_LTM = numeric (0), EH_pct = numeric (0), 
-                      revenue_LTM = numeric (0), 
-                      GH = numeric (0), FREH = numeric (0),  housing_loss = numeric (0), 
-                      revenue_10pct_LTM = numeric (0), active_listings_yoy = numeric(0),
-                      housing_loss_yoy = numeric (0), households = numeric (0))
-
-for (n in c(1:length(areas))) {
-  
-  urban_rural_property <- property %>% 
-    filter(housing == TRUE) %>% 
-    filter(urban_rural == areas[n])
-  
-  urban_rural_daily <- daily %>% 
-    filter(property_ID %in% urban_rural_property$property_ID)
-  
-  urban_rural[n,1] <- areas[n]
-  
-  urban_rural[n,2] <- urban_rural_property %>% 
-    filter(created <= end_date,
-           scraped >= end_date) %>% 
-    nrow()
-  
-  urban_rural[n,3] <- urban_rural_daily %>% 
-    filter(date <= end_date & date >= start_date) %>% 
-    group_by(date) %>% 
-    summarize(listings = n()) %>%
-    summarise(mean_listings = mean(listings))
-  
-  urban_rural[n,4] <-   nrow(urban_rural_daily %>% 
-                               filter(date == end_date) %>% 
-                               filter(listing_type == "Entire home/apt"))/
-    nrow(urban_rural_daily %>% 
-           filter(date == end_date))
-  
-  urban_rural[n,5] <-   urban_rural_daily %>% 
-    filter(date <= end_date & date >= start_date &
-             status == "R" ) %>%
-    summarise(sum_revenue = sum(price, na.rm = TRUE)*exchange_rate)
-  
-  urban_rural[n,6] <-       ifelse(urban_rural_daily %>% 
-                                     filter(date == end_date) %>% 
-                                     inner_join(GH, .) %>% nrow() == 0,
-                                   0,
-                                   urban_rural_daily %>% 
-                                     filter(date == end_date) %>% 
-                                     inner_join(GH, .) %>% 
-                                     select(ghost_ID, housing_units) %>% 
-                                     st_drop_geometry() %>% 
-                                     distinct() %>% 
-                                     select(housing_units) %>% 
-                                     sum())
-  
-  urban_rural[n,7] <-     nrow(urban_rural_daily %>% 
-                                 filter(date == end_date) %>% 
-                                 inner_join(FREH, .))
-  
-  urban_rural[n,8] <-  urban_rural[n,6] +  urban_rural[n,7]
-  
-  urban_rural[n,9] <- urban_rural_daily %>%
-    filter(date >= start_date, date <= end_date, status == "R") %>%
-    group_by(host_ID) %>%
-    summarize(rev = sum(price) * exchange_rate) %>%
-    filter(rev > 0) %>%
-    summarize(
-      `Top 10%` = sum(rev[rev > quantile(rev, c(0.90))] / sum(rev)))
-  
-  
-  urban_rural[n,10] <- urban_rural_property %>% 
-    filter(created <= end_date,
-           scraped >= end_date) %>% 
-    nrow() / 
-    urban_rural_property %>% 
-    filter(created <= date_yoy,
-           scraped >= date_yoy) %>% 
-    nrow()
-  
-  urban_rural[n,11] <- urban_rural[n, 8] /
-    (ifelse(urban_rural_daily %>% 
-              filter(date == date_yoy) %>% 
-              inner_join(GH, .) %>% nrow() == 0,
-            0,
-            urban_rural_daily %>% 
-              filter(date == date_yoy) %>% 
-              inner_join(GH, .) %>% 
-              select(ghost_ID, housing_units) %>% 
-              st_drop_geometry() %>% 
-              distinct() %>% 
-              select(housing_units) %>% 
-              sum()) +
-       nrow(urban_rural_daily %>% 
-              filter(date == date_yoy) %>% 
-              inner_join(FREH, .)))
-  
-  urban_rural[n, 12] <- neighbourhoods %>%
-    filter(urban_rural == areas[n]) %>% 
-    select(households) %>% 
-    st_drop_geometry() %>% 
-    sum()
-}
-
-rm(urban_rural_daily, urban_rural_property)
-
-urban_rural <- urban_rural %>% 
-  mutate(active_listings_pct = active_listings/households,
-         housing_loss_pct = housing_loss/households) %>% 
-  select(-c(active_listings_LTM, EH_pct, GH, FREH, revenue_10pct_LTM, households))
 
 
 ## Save files #####################################

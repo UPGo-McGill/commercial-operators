@@ -1,6 +1,6 @@
 #### 2 - MONTREAL ANALYSIS DATA IMPORT #########################################################
 
-source("R/01_helper_functions.R")
+source("R/01-helper_functions.R")
 
 ### Import data ################################################################
 
@@ -40,11 +40,11 @@ daily <-
 
 FREH <- 
   daily %>% 
-  strr_FREH("2017-01-01", "2019-12-31")
+  strr_FREH("2015-01-01", "2019-12-31")
 
 GH <- 
   property %>% 
   strr_as_sf(32618) %>% 
-  strr_ghost("2017-01-01", "2019-12-31")
+  strr_ghost("2015-01-01", "2019-12-31")
 
 save(property, daily, host, FREH, GH, file = "Montreal_data.Rdata")
