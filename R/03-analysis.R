@@ -88,7 +88,7 @@ nrow(filter(LTM_property, created <= "2019-07-01", scraped >= "2019-07-01", neig
 nrow(filter(LTM_property, created <= "2019-07-01", scraped >= "2019-07-01", neighbourhood == "Le Plateau-Mont-Royal"))
 
 
-### How many were FREHs? ######################################################
+### How many listings were FREHs? ######################################################
 
 nrow(filter(FREH, date == "2019-07-01", FREH == TRUE))
 
@@ -109,14 +109,12 @@ nrow(filter(property, created <= end_date, scraped >= end_date,
               housing == TRUE))
 
 # 2015-2019 EH Growth
-
 nrow(filter(property, created <= end_date, scraped >= end_date,
             listing_type == "Entire home/apt",  housing == TRUE)) / 
   nrow(filter(property, created <= date_yoy_2015, scraped >= date_yoy_2015,
               listing_type == "Entire home/apt", housing == TRUE))
 
 # 2016-2019 FREH Growth
-
 #nrow(filter(FREH, date == end_date, FREH == TRUE)) /
   #nrow(filter(FREH, date == "2016-01-01", FREH == TRUE))
 
@@ -197,7 +195,6 @@ filter(LTM_property, listing_type == "Entire home/apt") %>%
 
 
 ## Host revenue percentiles
-
 daily %>%
   filter(housing == TRUE, date >= start_date, status == "R") %>%
   group_by(host_ID) %>%
@@ -211,7 +208,6 @@ daily %>%
 
 
 ## Median host income
-
 LTM_property %>% 
   filter(revenue > 0) %>% 
   pull(revenue) %>% 
@@ -233,7 +229,6 @@ LTM_property %>%
 
 
 ## Multilistings
-
 ML_table <- 
   daily %>% 
   group_by(date) %>% 
