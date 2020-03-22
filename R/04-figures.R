@@ -67,7 +67,7 @@ Figure3 <-
     colors = c("#9DBF9E", "#FCB97D", "#A84268")
   )
 
-ggsave("Output/Figure1.png", plot = Figure1, width = 8, 
+ggsave("Output/Figure3.png", plot = Figure3, width = 8, 
        height = 5, units = "in")
   
 ### Figure 4 - Map: Vacancy rates by census tract at CMA extent #######################
