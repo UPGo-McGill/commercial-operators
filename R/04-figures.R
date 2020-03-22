@@ -72,6 +72,8 @@ ggsave("Output/Figure1.png", plot = Figure1, width = 8,
   
 ### Figure 4 - Map: Vacancy rates by census tract at CMA extent #######################
 
+# Note: Not finished
+
 boroughs <- st_read("Data/boroughs", "LIMADMIN")
 boroughs <- boroughs %>% 
   st_transform(32618)
@@ -96,7 +98,7 @@ names(vacancy)[15] <- "occupied_dwellings"
 vacancy <- vacancy %>% 
   mutate(vacancy_rate = (1 - (occupied_dwellings / Dwellings)) * 100)
 
-### Figure 5 - Map: Spatial distribution of listings, 2016-2019 #######################
+### Figure 5 - Map: Spatial distribution of listings, 2015-2019 #######################
 
 property_in_montreal <-
   property %>% 
@@ -174,30 +176,47 @@ Figure5 <-
         axis.text.y = element_blank(),
         rect = element_blank())
 
-ggsave("output/figure_5.png", plot = Figure5, width = 8, height = 9, units = "in")
+ggsave("output/Figure5.png", plot = Figure5, width = 8, height = 9, units = "in")
 
 ### Figure 6 - Graph: Growth of active listings since 2015 ############################
 
-active_listings_graph <-
-  active_listings_filtered %>% 
+Figure6 <-
+  active_listings %>% 
   ggplot() +
   geom_line(aes(date, n), colour = "#4295A8", size = 1.5) +
   theme_minimal() +
-  scale_y_continuous(name = NULL, label = comma) +
+  scale_y_continuous(name = NULL) +
   theme_minimal() +
   scale_x_date(name = NULL)
-#+
-#theme(text = element_text(family = "Futura"))
 
-ggsave("output/figure_1.pdf", plot = active_listings_graph, width = 8, 
-       height = 5, units = "in", useDingbats = FALSE)
+ggsave("output/Figure6.png", plot = Figure6, width = 8, 
+       height = 5, units = "in")
 
 ### Figure 7 - Graph: Listing growth by listing type since 2015 #######################
+
+# Note: Not finished
+
+housing_graph <- 
+  ggplot(housing_loss) +
+  geom_col(aes(date, `Housing units`, fill = `Listing type`),
+           lwd = 0) +
+  theme_minimal() +
+  scale_y_continuous(name = NULL, label = scales::comma, limits = c(0, 1000)) +
+  scale_x_date(name = NULL, limits = c(as.Date("2016-05-01"), NA)) +
+  scale_fill_manual(values = c("#4295A8", "#B4656F")) +
+  theme(legend.position = "bottom")
+#  text = element_text(family = "Futura", face = "plain"),
+# legend.title = element_text(family = "Futura", face = "bold", 
+#                             size = 10),
+# legend.text = element_text(family = "Futura", size = 10))
+
+ggsave("output/figure_7.pdf", plot = housing_graph, width = 8, height = 7, 
+       units = "in", useDingbats = FALSE)
 
 
 ### Figure 8 - Graph: Host revenue distribution in top percentiles ####################
 
-revenue_graph <-
+Figure8 <-
   daily %>%
   filter(housing == TRUE, date >= start_date, status == "R") %>%
   group_by(host_ID) %>%
@@ -219,25 +238,21 @@ revenue_graph <-
   scale_y_continuous(labels = scales::percent) +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
-        #text = element_text(family = "Futura", face = "plain"),
-        # legend.title = element_text(family = "Futura", face = "bold", 
-        #                            size = 10),
-        #legend.text = element_text(family = "Futura", size = 10),
         legend.position = "none")
 
-ggsave("output/figure_5.pdf", plot = revenue_graph, width = 8, height = 4, 
-       units = "in", useDingbats = FALSE)
+ggsave("output/Figure8.png", plot = Figure8, width = 8, height = 4, 
+       units = "in")
 
 ### Figure 9 - Graph: Growth of FREHs and FREH revenues since 2015 ####################
 
 ML_summary <- 
   daily %>% 
   group_by(date) %>% 
-  summarize(Listings = mean(ML),
-            Revenue = sum(price * (status == "R") * ML * exchange_rate, na.rm = TRUE) / 
+  summarize(Listings = mean(multi),
+            Revenue = sum(price * (status == "R") * multi * exchange_rate, na.rm = TRUE) / 
               sum(price * (status == "R") * exchange_rate, na.rm = TRUE))
 
-ML_graph <- 
+Figure9 <- 
   ML_summary %>% 
   gather(Listings, Revenue, key = `Multilisting percentage`, value = Value) %>% 
   ggplot() +
@@ -250,6 +265,6 @@ ML_graph <-
   scale_colour_manual(values = c("#4295A8", "#B4656F")) +
   theme(legend.position = "bottom")
 
-ggsave("output/figure_6.pdf", plot = ML_graph, width = 8, height = 7, 
-       units = "in", useDingbats = FALSE)
+ggsave("output/Figure9.png", plot = Figure9, width = 8, height = 7, 
+       units = "in")
 
