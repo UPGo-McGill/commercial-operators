@@ -11,10 +11,10 @@ start_date <- "2019-01-01"
 end_date <- "2019-12-31"
 
 # Exchange rate (average over last twelve months)
-exchange_rate <- mean(1.3037, 1.3010, 1.3200,
-                      1.3432, 1.3301, 1.3206, 
-                      1.3368, 1.3378, 1.3438,
-                      1.3188, 1.3046, 1.3316)
+exchange_rate <- mean(1.3301, 1.3201, 1.3365,
+                      1.3383, 1.3455, 1.3293, 
+                      1.3098, 1.3275, 1.3243,
+                      1.3187, 1.3236, 1.3168)
 
 # Add revenue column
 property <- 
