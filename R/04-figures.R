@@ -57,6 +57,16 @@ CTs <-
 
 font_import()
 
+boroughs <- st_read("Data/boroughs", "LIMADMIN")
+boroughs <- boroughs %>% 
+  st_transform(32618)
+
+
+metro <- st_read("Data/stm_sig", "stm_lignes_sig")
+metro <- metro %>% 
+  filter(route_name == "verte"| route_name == "orange" | route_name == "jaune" | route_name == "bleue") %>% 
+  st_transform(32618)
+
 Figure3 <- 
   CTs %>% 
   ggplot() +
@@ -84,17 +94,6 @@ ggsave("Output/Figure3.png", plot = Figure3, width = 8,
        height = 5, units = "in")
   
 ### Figure 4 - Map: Vacancy rates by census tract at CMA extent #######################
-
-boroughs <- st_read("Data/boroughs", "LIMADMIN")
-boroughs <- boroughs %>% 
-  st_transform(32618)
-
-
-metro <- st_read("Data/stm_sig", "stm_lignes_sig")
-metro <- metro %>% 
-  filter(route_name == "verte"| route_name == "orange" | route_name == "jaune" | route_name == "bleue") %>% 
-  st_transform(32618)
-
 
 vacancy <- get_census(
   dataset = "CA16",
@@ -149,15 +148,6 @@ property_in_montreal <-
   select(-revenue) %>% 
   st_intersection(st_buffer(montreal, 250))
 
-property_2015 <- 
-  daily %>% 
-  filter(status == "R", date >= "2015-01-01", date <= "2015-12-31") %>% 
-  group_by(property_ID) %>% 
-  summarize(revenue = sum(price) * exchange_rate) %>% 
-  left_join(filter(property_in_montreal, housing == TRUE), .) %>% 
-  mutate(Year = "2015") %>% 
-  filter(revenue > 0)
-
 property_2016 <- 
   daily %>% 
   filter(status == "R", date >= "2016-01-01", date <= "2016-12-31") %>% 
@@ -195,14 +185,14 @@ property_2019 <-
   filter(revenue > 0)
 
 Figure5 <- 
-  rbind(property_2015, property_2016, property_2017, property_2018, property_2019) %>%
+  rbind(property_2016, property_2017, property_2018, property_2019) %>%
   ggplot() +
   geom_sf(data = streets, colour = alpha("grey", 0.5)) +
   geom_sf(aes(size = revenue, colour = listing_type), alpha = 0.2, 
           show.legend = "point") +
   facet_wrap(vars(Year), nrow = 3) +
   scale_colour_manual(name = "Listing type",
-                      values = c("#4295A8", "#B4656F", "#C7F2A7")) +
+                      values = c("#6C8A84", "#C9815F", "#E3C0B2")) +
   scale_size_continuous(name = "Annual revenue",
                         breaks = c(20000, 40000, 60000, 80000, 100000),
                         labels = c("$20,000", "$40,000", "$60,000", "$80,000",
@@ -210,14 +200,17 @@ Figure5 <-
                         range = c(0.05, 2.5)) +
   guides(size = guide_legend(nrow = 3, byrow = TRUE),
          colour = guide_legend(
-           override.aes = list(fill = c("#4295A8", "#B4656F", "#C7F2A7"), 
+           override.aes = list(fill = c("#6C8A84", "#C9815F", "#E3C0B2"), 
                                alpha = 1), nrow = 3, byrow = TRUE)) +
   theme(legend.position = "bottom",
         legend.spacing.y = unit(10, "pt"),
         axis.ticks = element_blank(),
         axis.text.x = element_blank(),
         axis.text.y = element_blank(),
-        rect = element_blank())
+        rect = element_blank()) +
+  theme(text = element_text(family = "Segoe UI Semilight"),
+        legend.title = element_text(family = "Segoe UI Black", size = 10),
+        legend.text = element_text(family = "Segoe UI Semilight", size = 10))
 
 ggsave("output/Figure5.png", plot = Figure5, width = 8, height = 9, units = "in")
 
@@ -226,7 +219,7 @@ ggsave("output/Figure5.png", plot = Figure5, width = 8, height = 9, units = "in"
 Figure6 <-
   active_listings %>% 
   ggplot() +
-  geom_line(aes(date, n), colour = "#4295A8", size = 1.5) +
+  geom_line(aes(date, n), colour = "#6C8A84", size = 1.5) +
   theme_minimal() +
   scale_y_continuous(name = NULL) +
   theme_minimal() +
@@ -246,15 +239,15 @@ housing_graph <-
   theme_minimal() +
   scale_y_continuous(name = NULL, label = scales::comma, limits = c(0, 1000)) +
   scale_x_date(name = NULL, limits = c(as.Date("2016-05-01"), NA)) +
-  scale_fill_manual(values = c("#4295A8", "#B4656F")) +
+  scale_fill_manual(values = c("#6C8A84", "#C9815F")) +
   theme(legend.position = "bottom")
 #  text = element_text(family = "Futura", face = "plain"),
 # legend.title = element_text(family = "Futura", face = "bold", 
 #                             size = 10),
 # legend.text = element_text(family = "Futura", size = 10))
 
-ggsave("output/figure_7.pdf", plot = housing_graph, width = 8, height = 7, 
-       units = "in", useDingbats = FALSE)
+ggsave("output/Figure7.png", plot = housing_graph, width = 8, height = 7, 
+       units = "in")
 
 
 ### Figure 8 - Graph: Host revenue distribution in top percentiles ####################
@@ -276,7 +269,7 @@ Figure8 <-
                              levels = c('Top 1%', 'Top 5%', 'Top 10%', 'Top 20%'))
   ) %>% 
   ggplot() +
-  geom_bar(aes(percentile, value), stat = "identity", fill = "#4295A8") +
+  geom_bar(aes(percentile, value), stat = "identity", fill = "#6C8A84") +
   theme_minimal() +
   scale_y_continuous(labels = scales::percent) +
   theme(axis.title.y = element_blank(),
@@ -305,7 +298,7 @@ Figure9 <-
   theme_minimal() +
   scale_y_continuous(name = NULL, label = scales::percent) +
   scale_x_date(name = NULL) +
-  scale_colour_manual(values = c("#4295A8", "#B4656F")) +
+  scale_colour_manual(values = c("#c9815f", "#6c8a84")) +
   theme(legend.position = "bottom")
 
 ggsave("output/Figure9.png", plot = Figure9, width = 8, height = 7, 
