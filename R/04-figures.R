@@ -59,15 +59,15 @@ font_import()
 
 boroughs <- st_read("Data/boroughs", "LIMADMIN")
 boroughs <- boroughs %>% 
+  filter(NOM == "Le Plateau-Mont-Royal" | NOM == "Ville-Marie") %>% 
   st_transform(32618)
-
 
 metro <- st_read("Data/stm_sig", "stm_lignes_sig")
 metro <- metro %>% 
   filter(route_name == "verte"| route_name == "orange" | route_name == "jaune" | route_name == "bleue") %>% 
   st_transform(32618)
 
-Figure3 <- 
+Figure3 <-
   CTs %>% 
   ggplot() +
   geom_sf(
@@ -88,7 +88,16 @@ Figure3 <-
    legend.position = c(0, .95)) +
   theme(text = element_text(family = "Segoe UI Semilight"),
         legend.title = element_text(family = "Segoe UI Black", size = 12),
-        legend.text = element_text(family = "Segoe UI Semilight", size = 10))
+        legend.text = element_text(family = "Segoe UI Semilight", size = 10)) +
+  geom_sf(
+    data = boroughs,
+    lwd = 1,
+    alpha = 0) +
+  geom_sf(
+    data = metro,
+    aes(colour = route_name),
+    colour = c("green", "green", "orange", "orange", "orange", "orange", "yellow", "yellow", "blue", "blue"),
+    lwd = 1)
 
 ggsave("Output/Figure3.png", plot = Figure3, width = 8, 
        height = 5, units = "in")
@@ -219,35 +228,41 @@ ggsave("output/Figure5.png", plot = Figure5, width = 8, height = 9, units = "in"
 Figure6 <-
   active_listings %>% 
   ggplot() +
+  geom_ribbon(
+    aes(xmin = as.Date("2019-05-01", "%Y-%m-%d"), 
+        xmax = as.Date("2019-08-31",  "%Y-%m-%d"),
+        y = n),
+    fill = "#9CBAB4",
+    alpha = 0.5) +
+  geom_ribbon(
+    aes(xmin = as.Date("2018-05-01", "%Y-%m-%d"), 
+        xmax = as.Date("2018-08-31",  "%Y-%m-%d"),
+        y = n),
+    fill = "#9CBAB4",
+    alpha = 0.5) +
+  geom_ribbon(
+    aes(xmin = as.Date("2017-05-01", "%Y-%m-%d"), 
+        xmax = as.Date("2017-08-31",  "%Y-%m-%d"),
+        y = n),
+    fill = "#9CBAB4",
+    alpha = 0.5) +
+  geom_ribbon(
+    aes(xmin = as.Date("2016-05-01", "%Y-%m-%d"), 
+        xmax = as.Date("2016-08-31",  "%Y-%m-%d"),
+        y = n),
+    fill = "#9CBAB4",
+    alpha = 0.5) +
   geom_line(aes(date, n), colour = "#6C8A84", size = 1.5) +
   theme_minimal() +
   scale_y_continuous(name = NULL) +
   theme_minimal() +
-  scale_x_date(name = NULL)
+  scale_x_date(name = NULL) +
+  theme(text = element_text(family = "Segoe UI Semilight"),
+        legend.title = element_text(family = "Segoe UI Black", size = 10),
+        legend.text = element_text(family = "Segoe UI Semilight", size = 10))
 
 ggsave("output/Figure6.png", plot = Figure6, width = 8, 
        height = 5, units = "in")
-
-### Figure 7 - Graph: Listing growth by listing type since 2015 #######################
-
-# Note: Not finished
-
-housing_graph <- 
-  ggplot(housing_loss) +
-  geom_col(aes(date, `Housing units`, fill = `Listing type`),
-           lwd = 0) +
-  theme_minimal() +
-  scale_y_continuous(name = NULL, label = scales::comma, limits = c(0, 1000)) +
-  scale_x_date(name = NULL, limits = c(as.Date("2016-05-01"), NA)) +
-  scale_fill_manual(values = c("#6C8A84", "#C9815F")) +
-  theme(legend.position = "bottom")
-#  text = element_text(family = "Futura", face = "plain"),
-# legend.title = element_text(family = "Futura", face = "bold", 
-#                             size = 10),
-# legend.text = element_text(family = "Futura", size = 10))
-
-ggsave("output/Figure7.png", plot = housing_graph, width = 8, height = 7, 
-       units = "in")
 
 
 ### Figure 8 - Graph: Host revenue distribution in top percentiles ####################
@@ -269,12 +284,15 @@ Figure8 <-
                              levels = c('Top 1%', 'Top 5%', 'Top 10%', 'Top 20%'))
   ) %>% 
   ggplot() +
-  geom_bar(aes(percentile, value), stat = "identity", fill = "#6C8A84") +
+  geom_bar(aes(percentile, value), stat = "identity", fill = "#E3C0B2") +
   theme_minimal() +
   scale_y_continuous(labels = scales::percent) +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
-        legend.position = "none")
+        legend.position = "none") +
+  theme(text = element_text(family = "Segoe UI Semilight"),
+        legend.title = element_text(family = "Segoe UI Black", size = 10),
+        legend.text = element_text(family = "Segoe UI Semilight", size = 10))
 
 ggsave("output/Figure8.png", plot = Figure8, width = 8, height = 4, 
        units = "in")
@@ -284,6 +302,7 @@ ggsave("output/Figure8.png", plot = Figure8, width = 8, height = 4,
 ML_summary <- 
   daily %>% 
   group_by(date) %>% 
+  filter(date >= "2016-01-01") %>% 
   summarize(Listings = mean(multi),
             Revenue = sum(price * (status == "R") * multi * exchange_rate, na.rm = TRUE) / 
               sum(price * (status == "R") * exchange_rate, na.rm = TRUE))

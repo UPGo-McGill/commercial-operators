@@ -36,7 +36,8 @@ active_listings <-
   daily %>% 
   filter(housing == TRUE) %>% 
   count(date)%>% 
-  arrange(desc(date))
+  arrange(desc(date)) %>% 
+  filter(date >= "2016-01-01")
 
 ## Active listings from property file
 # All housing listings on Dec 31, 2019
