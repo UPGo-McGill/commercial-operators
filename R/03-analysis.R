@@ -9,6 +9,7 @@ load("Data/Montreal_data.Rdata")
 # Set up dates
 start_date <- "2019-01-01"
 end_date <- "2019-12-31"
+july_2019 <- "2019-07-01"
 
 # Exchange rate (average over last twelve months)
 exchange_rate <- mean(1.3301, 1.3201, 1.3365,
@@ -43,18 +44,23 @@ active_listings <-
 # All housing listings on Dec 31, 2019
 nrow(filter(property, created <= end_date, scraped >= end_date, housing == TRUE))
 
+# Peak active listings in 2019
+active_listings %>% 
+  filter(date >= start_date) %>% 
+  arrange(desc(n))
+
 # Housing listings over the last twelve months
 nrow(LTM_property)
 
 # Listing type breakdown
-nrow(filter(property, created <= end_date, scraped >= end_date, listing_type == "Entire home/apt"))/
-  nrow(filter(property, created <= end_date, scraped >= end_date))
+nrow(filter(property, created <= july_2019, scraped >= july_2019, listing_type == "Entire home/apt"))/
+  nrow(filter(property, created <= july_2019, scraped >= july_2019))
 
-nrow(filter(property, created <= end_date, scraped >= end_date, listing_type == "Private room"))/
-  nrow(filter(property, created <= end_date, scraped >= end_date))
+nrow(filter(property, created <= july_2019, scraped >= july_2019, listing_type == "Private room"))/
+  nrow(filter(property, created <= july_2019, scraped >= july_2019))
 
-nrow(filter(LTM_property, listing_type == "Shared room"))/
-  nrow(LTM_property)
+nrow(filter(property, created <= july_2019, scraped >= july_2019, listing_type == "Shared room"))/
+  nrow(filter(property, created <= july_2019, scraped >= july_2019))
 
 # Number of hosts over last twelve months
 length(unique(LTM_property$host_ID))
@@ -84,9 +90,13 @@ nrow(LTM_property)
 
 ### Which boroughs have the most listings? ####################################
 
-nrow(filter(LTM_property, created <= "2019-07-01", scraped >= "2019-07-01", neighbourhood == "Ville-Marie"))
-
-nrow(filter(LTM_property, created <= "2019-07-01", scraped >= "2019-07-01", neighbourhood == "Le Plateau-Mont-Royal"))
+borough_listings_LTM <- 
+  LTM_property %>% 
+  filter(created <= july_2019, 
+         scraped >= july_2019) %>% 
+  group_by(neighbourhood) %>% 
+  count(neighbourhood) %>% 
+  arrange(desc(n))
 
 
 ### How many listings were FREHs? ######################################################
@@ -100,13 +110,13 @@ nrow(filter(FREH, date == "2019-07-01", FREH == TRUE))
 date_yoy_2019 <- "2018-12-31"
 date_yoy_2018 <- "2017-12-31"
 date_yoy_2017 <- "2016-12-31"
-date_yoy_2016 <- "2015-12-31"
+date_yoy_2016 <- "2016-01-01"
 date_yoy_2015 <- "2014-12-31"
 
-# 2015-2019 Growth
+# 2016-2019 Growth
 nrow(filter(property, created <= end_date, scraped >= end_date,
             housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2015, scraped >= date_yoy_2015,
+  nrow(filter(property, created <= date_yoy_2016, scraped >= date_yoy_2016,
               housing == TRUE))
 
 # 2015-2019 EH Growth
@@ -195,7 +205,7 @@ filter(LTM_property, listing_type == "Entire home/apt") %>%
   sum(na.rm = TRUE) / sum(LTM_property$revenue, na.rm = TRUE)
 
 
-## Host revenue percentiles
+## Host revenue percentiles (2019)
 daily %>%
   filter(housing == TRUE, date >= start_date, status == "R") %>%
   group_by(host_ID) %>%
@@ -207,8 +217,19 @@ daily %>%
     `Top 10%` = sum(rev[rev > quantile(rev, c(0.90))] / sum(rev)),
     `Top 20%` = sum(rev[rev > quantile(rev, c(0.80))] / sum(rev)))
 
+## Host revenue percentiles (2016)
+daily %>% 
+  filter(housing == TRUE, date >= date_yoy_2016, date <= date_yoy_2017, status == "R") %>% 
+  group_by(host_ID) %>% 
+  summarise(rev = sum(price)*exchange_rate) %>% 
+  filter(rev > 0) %>% 
+  summarize(`Top 1%`  = sum(rev[rev > quantile(rev, c(0.99))] / sum(rev)),
+            `Top 5%`  = sum(rev[rev > quantile(rev, c(0.95))] / sum(rev)),
+            `Top 10%` = sum(rev[rev > quantile(rev, c(0.90))] / sum(rev)),
+            `Top 20%` = sum(rev[rev > quantile(rev, c(0.80))] / sum(rev)))
 
-## Median host income
+
+## Median host income (2019)
 LTM_property %>% 
   filter(revenue > 0) %>% 
   pull(revenue) %>% 
@@ -217,6 +238,19 @@ LTM_property %>%
   as_tibble() %>% 
   select(-`0%`) %>% 
   set_names(c("25th percentile", "Median", "75th percentile", 
+              "100th percentile")) %>% 
+  mutate_all(round, -2)
+
+## Median host income (2016)
+property %>% 
+  filter(created <= date_yoy_2017, scraped >= date_yoy_2016, housing == TRUE) %>% 
+  filter(revenue > 0) %>% 
+  pull(revenue) %>% 
+  quantile() %>% 
+  as.list() %>% 
+  as_tibble() %>% 
+  select(-`0%`) %>% 
+  set_names(c("25th percentile", "Median", "75th percentile",
               "100th percentile")) %>% 
   mutate_all(round, -2)
 
