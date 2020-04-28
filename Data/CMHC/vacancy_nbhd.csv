@@ -1,0 +1,110 @@
+NBHD_Code,NBHD,Bachelor,1 Bedroom,2 Bedroom,3 Bedroom +,Total
+220,Ahuntsic,1.1,0.6,0.2,**,0.4
+200,Anjou,**,0.4,0.2,**,0.2
+450,Auteuil,**,0,**,0,0
+280,Beaconsfield-Kirkland,**,**,0.7,**,0.8
+720,Bellefeuille/Saint-Colomban/Gore,**,**,**,**,NA
+910,Beloeil,0,0.4,**,0,0.1
+540,Boisbriand,**,**,**,**,NA
+570,Bois-des-Filion,**,**,**,**,NA
+790,Boucherville,**,**,0.5,0,0.4
+770,Brossard,0,2.3,3.9,**,2.9
+810,Candiac,**,0,0,0,0
+960,Carignan/Chambly,0,0,0,**,0.2
+230,Cartierville,0.7,**,0.4,**,0.6
+630,Charlemagne,**,0,0,0,0
+850,Châteauguay/Léry,**,0.5,1.1,0.5,1
+380,Chomedey,**,5.8,**,1.5,2.7
+090,Côte-des-Neiges,2.2,1.7,0.9,1,1.4
+080,Côte-Saint-Luc/Montreal West,**,2.3,1.7,0.9,1.9
+820,Delson,**,1.4,**,0,1.7
+490,Deux-Montagnes,**,**,**,**,NA
+300,Dollard-des-Ormeaux,2.9,2.1,2.3,3.1,2.4
+260,Dorval/Île-Dorval,**,0.6,1.5,0,1.2
+410,Duvernay,**,**,**,**,0
+160,East Ville-Marie,1.4,0.3,**,0.4,0.7
+470,Fabreville,**,0,0.9,0,1
+760,Greenfield Park,0,0.8,0.6,**,0.6
+070,Hampstead/Côte-Saint-Luc,**,0,**,**,0
+170,Hochelaga-Maisonneuve,**,0.3,**,**,3
+,Iberville,**,**,0.2,**,0.4
+010,Île-des-Soeurs,0,0,0,0,0
+620,La Plaine,**,**,**,**,NA
+800,La Prairie,**,**,**,**,3.2
+,L'Acadie/Saint-Luc,**,**,**,0,0
+600,Lachenaie,**,0,0.3,**,0.3
+250,Lachine,3.4,**,1.9,**,3.3
+710,Lafontaine,**,0.4,**,**,0.4
+040,LaSalle,1.3,1.1,0.5,0.3,0.6
+660,L'Assomption/Saint-Sulpice,**,**,**,**,NA
+390,Laval-des-Rapides,0,**,0.2,0.2,0.6
+480,Laval-Ouest,**,**,**,**,NA
+680,Lavaltrie,**,**,**,0,0
+650,Le Gardeur,**,0,**,**,0
+750,Lemoyne,**,**,**,**,NA
+320,L'Île-Bizard/Sainte-Geneviève,**,0.7,0.9,**,0.9
+730,Longueuil,**,1.9,**,0.4,1.5
+560,Lorraine/Rosemère/Blainville,**,**,0.7,**,0.5
+870,Maple Grove/Beauharnois,**,**,**,**,NA
+610,Mascouche,**,0,0.1,0,0.1
+900,McMasterville,**,**,0,**,0
+330,Mercier,**,1.2,**,**,1.2
+530,Mirabel/Saint-Placide,**,1.3,0.4,**,0.4
+340,Montréal-Est,**,0.4,**,**,0.1
+210,Montréal-Nord,0.4,**,**,0.2,0.3
+110,Mont-Royal,0,0.7,1.6,1.9,1.2
+950,Mont-Saint-Hilaire,**,0,0,0,0
+060,Notre-Dame-de-Grâce,1.5,2.1,3.2,1,2.4
+970,Notre-Dame-de-l'Île-Perrot/Pincourt/Terrasse-Vaudreuil/L'Île-Perrot,0,**,2.3,0,1.7
+945,Otterburn Park,**,**,**,**,NA
+100,Outremont,**,0.3,**,**,0.3
+130,Parc-Extension,**,0.7,**,**,0.7
+670,Parish of L'Epiphanie/Ville de L'Epiphanie/Saint-Gerard-Majella,**,**,0.6,**,0.3
+120,Plateau-Mont-Royal,**,1.3,0.7,0.3,0.8
+350,Pointe-aux-Trembles,0.4,0.8,2.5,2.6,2.2
+270,Pointe-Claire,0,**,1,0.8,1.2
+400,Pont-Viau,0,1.9,0.5,0.7,0.8
+640,Repentigny,1.8,**,**,0.5,1.15
+965,Richelieu,**,**,0,0,0
+360,Rivière-des-Prairies,**,0.3,**,0.2,0.25
+180,Rosemont/La Petite-Patrie,**,0.6,**,0.1,1.3
+930,Saint-Amable,**,**,**,**,NA
+690,Saint-Antoine,**,**,**,**,NA
+,Saint-Athanase,**,**,**,**,NA
+890,Saint-Basile-le-Grand,**,0,0,0,0
+880,Saint-Bruno-de-Montarville,0,1.9,0,2.2,0.6
+840,Saint-Constant/Saint-Mathieu/Saint-Philippe,**,0,0.6,0,0.4
+290,Sainte-Anne-de-Bellevue/Baie-d'Urfé,**,0.7,0.4,0,1.1
+580,Sainte-Anne-des-Plaines,**,0,**,**,0
+830,Sainte-Catherine,**,1.1,0,0,0.1
+370,Sainte-Dorothée,**,**,**,**,0.6
+920,Sainte-Julie/Saint-Mathieu-de-Beloeil,0,0.5,**,**,1
+500,Sainte-Marthe-sur-le-Lac,**,**,**,**,NA
+460,Sainte-Rose,**,0,0.3,0,0.3
+550,Sainte-Thérèse,0,**,**,**,0.5
+510,Saint-Eustache,0,0,**,0.2,0.066666667
+430,Saint-François,**,**,**,**,NA
+780,Saint-Hubert,0,0.8,2.5,1.4,1.9
+860,Saint-Isidore/Ville de Mercier,**,**,0,0,0
+,Saint-Jean,**,0.1,1.1,**,1.2
+700,Saint-Jérôme,**,**,0.4,0.1,1.3
+520,Saint-Joseph-du-Lac/Pointe-Calumet/Oka,**,**,**,**,NA
+740,Saint-Lambert,2.5,1.7,1.8,0,1.6
+240,Saint-Laurent,2.6,3.6,1.6,**,3.1
+985,Saint-Lazare/Hudson,**,**,**,0,0
+190,Saint-Léonard,**,**,0.2,0,0.1
+,Saint-Lin–Laurentides V,**,**,**,**,NA
+955,Saint-Mathias-sur-Richelieu,**,0,0,**,0
+150,Saint-Michel,**,0,0,**,0.2
+420,Saint-Vincent-de-Paul,1.7,1.7,0.6,**,0.9
+310,Senneville/Roxboro-Pierrefonds,2.2,2.1,2.6,0.3,2.2
+030,South West,**,0.2,0.3,0.3,0.3
+590,Terrebonne,0,**,0,**,0.7
+935,Varennes,**,**,**,**,NA
+,Vaudreuil-Dorion/Vaudreuil-sur-le-Lac/L'Île-Cadieux/Pointe-des-Cascades,11.3,10.3,2,0,3.4
+940,Verchères,**,**,**,**,NA
+020,Verdun,0.6,0.3,0.1,**,0.2
+005,Ville-Marie,1.6,2.6,3.7,**,3.1
+140,Villeray,2,**,0.2,**,0.7
+440,Vimont,**,**,0.5,0,0.7
+050,Westmount,0,1.1,**,0.4,0.75

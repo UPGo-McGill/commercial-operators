@@ -19,9 +19,17 @@ CTs <-
   get_census(
     dataset = "CA16",
     regions = list(CMA = "24462"),
+    vectors = c("v_CA16_406", "v_CA16_5792", "v_CA16_5801", "v_CA16_5804", "v_CA16_5807", "v_CA16_405"),
     level = "CT",
     geo_format = "sf") %>% 
   st_transform(32618)
+
+names(CTs)[15] <- "density"
+names(CTs)[16] <- "occupied_dwellings"
+names(CTs)[17] <- "commute_total"
+names(CTs)[18] <- "commute_transit"
+names(CTs)[19] <- "commute_walk"
+names(CTs)[20] <- "commute_bike"
 
 streets <- 
   getbb("montreal") %>% 
@@ -40,7 +48,7 @@ streets <-
   streets %>% st_join(montreal["geometry"],
                       join = st_within, left = FALSE)
 
-### Figure 3 - Map: Spatial distribution of listings at CMA extent ####################
+### Figure 1 - Map: Spatial distribution of listings at CMA extent ####################
 
 listings_mtl <- 
   filter(property, created <= "2019-07-01", scraped >= "2019-07-01", housing == TRUE) %>% 
@@ -52,22 +60,21 @@ listings_mtl <-
 CTs <- 
   CTs %>% 
   right_join(listings_mtl) %>% 
-  select(GeoUID, dwellings = Dwellings, listings = n, geometry) %>% 
+  select(GeoUID, dwellings = Dwellings, listings = n, geometry, density, commute_total, commute_transit,
+         commute_walk, commute_bike, occupied_dwellings) %>% 
   st_simplify(preserveTopology = TRUE, dTolerance = 5)
 
 font_import()
 
 boroughs <- st_read("Data/boroughs", "LIMADMIN")
 boroughs <- boroughs %>% 
+  st_transform(32618)
+
+boroughs_filtered <- boroughs %>% 
   filter(NOM == "Le Plateau-Mont-Royal" | NOM == "Ville-Marie") %>% 
   st_transform(32618)
 
-metro <- st_read("Data/stm_sig", "stm_lignes_sig")
-metro <- metro %>% 
-  filter(route_name == "verte"| route_name == "orange" | route_name == "jaune" | route_name == "bleue") %>% 
-  st_transform(32618)
-
-Figure3 <-
+Figure1 <-
   CTs %>% 
   ggplot() +
   geom_sf(
@@ -76,7 +83,7 @@ Figure3 <-
     colour = "white"
     ) +
   scale_fill_gradientn(
-    colors = c("#6C8A84", "#EAD7D0", "#C9815F"),
+    colors = c("#455C7B", "#AC6C82", "#FFBC67"),
     na.value = "grey80",
     limits = c(0, 0.1),
     oob = scales::squish,
@@ -88,43 +95,108 @@ Figure3 <-
    legend.position = c(0, .95)) +
   theme(text = element_text(family = "Segoe UI Semilight"),
         legend.title = element_text(family = "Segoe UI Black", size = 12),
-        legend.text = element_text(family = "Segoe UI Semilight", size = 10)) +
+        legend.text = element_text(family = "Segoe UI Semilight", size = 10))
+
+ggsave("Output/Figure1.png", plot = Figure1, width = 6, 
+       height = 5, units = "in")
+
+### Figure 2 - Map: Density by census tract at Island extent ##########################
+
+Figure2 <- 
+  CTs %>% 
+  ggplot() +
   geom_sf(
-    data = boroughs,
-    lwd = 1,
-    alpha = 0) +
+    aes(fill = density),
+    lwd = 0,
+    colour = "white"
+  ) +
+  scale_fill_gradientn(
+    colors = c("#455C7B", "#AC6C82", "#FFBC67"),
+    na.value = "grey80",
+    limits = c(0, 15000),
+    oob = scales::squish,
+    labels = ,
+    name = "Population density per square kilometre") +
+  coord_sf(expand = FALSE) +
+  theme_void() +
+  theme(legend.justification = c(0, 1),
+        legend.position = c(0, .95)) +
+  theme(text = element_text(family = "Segoe UI Semilight"),
+        legend.title = element_text(family = "Segoe UI Black", size = 12),
+        legend.text = element_text(family = "Segoe UI Semilight", size = 10))
+
+ggsave("Output/Figure2.png", plot = Figure2, width = 6, 
+       height = 5, units = "in")
+
+### Figure 3 - Map: Transit ridership by census tract at Island extent ############
+
+metro <- st_read("Data/stm_sig", "stm_lignes_sig")
+metro <- metro %>% 
+  filter(route_name == "verte"| route_name == "orange" | route_name == "jaune" | route_name == "bleue") %>% 
+  st_transform(32618)
+
+Figure3 <- 
+  CTs %>% 
+  ggplot() +
+  geom_sf(
+    aes(fill = (commute_transit + commute_walk + commute_bike) / commute_total),
+    lwd = 0,
+    colour = "white"
+  ) +
+  scale_fill_gradientn(
+    colors = c("#455C7B", "#AC6C82", "#FFBC67"),
+    na.value = "grey80",
+    limits = c(0, 0.75),
+    oob = scales::squish,
+    labels = scales::percent,
+    name = "Active transport commuters per total commuter population") +
+  coord_sf(expand = FALSE) +
+  theme_void() +
+  theme(legend.justification = c(0, 1),
+        legend.position = c(0, .95)) +
+  theme(text = element_text(family = "Segoe UI Semilight"),
+        legend.title = element_text(family = "Segoe UI Black", size = 11),
+        legend.text = element_text(family = "Segoe UI Semilight", size = 10)) +
   geom_sf(
     data = metro,
     aes(colour = route_name),
-    colour = c("green", "green", "orange", "orange", "orange", "orange", "yellow", "yellow", "blue", "blue"),
-    lwd = 1)
+    colour = c("forestgreen", "forestgreen", "darkorange2", "darkorange2", "darkorange2", "darkorange2", 
+               "goldenrod1", "goldenrod1", "dodgerblue", "dodgerblue"),
+    lwd = 1.5)
 
-ggsave("Output/Figure3.png", plot = Figure3, width = 8, 
+ggsave("Output/Figure3.png", plot = Figure3, width = 6, 
        height = 5, units = "in")
   
 ### Figure 4 - Map: Vacancy rates by census tract at CMA extent #######################
 
-vacancy <- get_census(
-  dataset = "CA16",
-  regions = list(CMA = "24462"),
-  level = "CT",
-  vectors = "v_CA16_405",
-  geo_format = "sf") %>% 
+CMHC <- read_sf("Data/CMHC/CMHC_NBHD_2016-mercWGS84.shp")
+
+CMHC <- 
+  CMHC %>% 
+  filter(METCODE == "1060") %>%
+  select(-OBJECTID, -NBHDNAME_F, -NBHDNAME_1, -NBHDNAME_L, -NBHDNAME_E,
+         -NAME_FR, -GEO_LAYER_, -SHAPE_Leng, -SHAPE_Area) %>% 
   st_transform(32618)
 
-names(vacancy)[15] <- "occupied_dwellings"
+vacancy_nbhd <- read.csv("Data/CMHC/vacancy_nbhd.csv", colClasses = "character")
 
-vacancy <- vacancy %>% 
-  mutate(vacancy_rate = (1 - (occupied_dwellings / Dwellings)) * 100)
+vacancy_nbhd$Total <- as.numeric(vacancy_nbhd$Total)
 
-vacancy <- 
-  vacancy %>% 
-  right_join(listings_mtl) %>% 
-  select(GeoUID, dwellings = Dwellings, listings = n, geometry, vacancy_rate) %>% 
-  st_simplify(preserveTopology = TRUE, dTolerance = 5)
+names(vacancy_nbhd)[1] <- "NBHDCODE"
+
+CMHC <- 
+  left_join(CMHC, vacancy_nbhd, by = "NBHDCODE")
+
+CMHC <- 
+  CTs %>% 
+  st_join(CMHC, join = st_intersects, left = T)
+
+CMHC <- 
+  CMHC %>% 
+  mutate(vacancy_rate = Total / 100)
 
 Figure4 <- 
-  vacancy %>% 
+  CMHC %>% 
   ggplot() +
   geom_sf(
     aes(fill = vacancy_rate),
@@ -132,9 +204,9 @@ Figure4 <-
     colour = "white"
   ) +
   scale_fill_gradientn(
-    colors = c("#6C8A84", "#EAD7D0", "#C9815F"),
+    colors = c("#FFBC67", "#AC6C82", "#455C7B"),
     na.value = "grey80",
-    limits = c(0, 0.1),
+    limits = c(0, 0.03),
     oob = scales::squish,
     labels = scales::percent,
     name = "Vacancy rate") +
@@ -145,7 +217,7 @@ Figure4 <-
         legend.title = element_text(family = "Segoe UI Black", size = 12),
         legend.text = element_text(family = "Segoe UI Semilight", size = 10))
 
-ggsave("Output/Figure3.png", plot = Figure3, width = 8, 
+ggsave("Output/Figure4.png", plot = Figure4, width = 6, 
        height = 5, units = "in")
 
 
@@ -201,15 +273,14 @@ Figure5 <-
           show.legend = "point") +
   facet_wrap(vars(Year), nrow = 3) +
   scale_colour_manual(name = "Listing type",
-                      values = c("#6C8A84", "#C9815F", "#E3C0B2")) +
+                      values = c("#455C7B", "#AC6C82", "#FFBC67")) +
   scale_size_continuous(name = "Annual revenue",
                         breaks = c(20000, 40000, 60000, 80000, 100000),
                         labels = c("$20,000", "$40,000", "$60,000", "$80,000",
-                                   "$100,000"),
-                        range = c(0.05, 2.5)) +
+                                   "$100,000")) +
   guides(size = guide_legend(nrow = 3, byrow = TRUE),
          colour = guide_legend(
-           override.aes = list(fill = c("#6C8A84", "#C9815F", "#E3C0B2"), 
+           override.aes = list(fill = c("#455C7B", "#AC6C82", "#FFBC67"), 
                                alpha = 1), nrow = 3, byrow = TRUE)) +
   theme(legend.position = "bottom",
         legend.spacing.y = unit(10, "pt"),
@@ -232,27 +303,27 @@ Figure6 <-
     aes(xmin = as.Date("2019-05-01", "%Y-%m-%d"), 
         xmax = as.Date("2019-08-31",  "%Y-%m-%d"),
         y = n),
-    fill = "#9CBAB4",
+    fill = "#685C79",
     alpha = 0.5) +
   geom_ribbon(
     aes(xmin = as.Date("2018-05-01", "%Y-%m-%d"), 
         xmax = as.Date("2018-08-31",  "%Y-%m-%d"),
         y = n),
-    fill = "#9CBAB4",
+    fill = "#685C79",
     alpha = 0.5) +
   geom_ribbon(
     aes(xmin = as.Date("2017-05-01", "%Y-%m-%d"), 
         xmax = as.Date("2017-08-31",  "%Y-%m-%d"),
         y = n),
-    fill = "#9CBAB4",
+    fill = "#685C79",
     alpha = 0.5) +
   geom_ribbon(
     aes(xmin = as.Date("2016-05-01", "%Y-%m-%d"), 
         xmax = as.Date("2016-08-31",  "%Y-%m-%d"),
         y = n),
-    fill = "#9CBAB4",
+    fill = "#685C79",
     alpha = 0.5) +
-  geom_line(aes(date, n), colour = "#6C8A84", size = 1.5) +
+  geom_line(aes(date, n), colour = "#685C79", size = 1.5) +
   theme_minimal() +
   scale_y_continuous(name = NULL) +
   theme_minimal() +
@@ -284,7 +355,7 @@ Figure8 <-
                              levels = c('Top 1%', 'Top 5%', 'Top 10%', 'Top 20%'))
   ) %>% 
   ggplot() +
-  geom_bar(aes(percentile, value), stat = "identity", fill = "#E3C0B2") +
+  geom_bar(aes(percentile, value), stat = "identity", fill = "#DA727E") +
   theme_minimal() +
   scale_y_continuous(labels = scales::percent) +
   theme(axis.title.y = element_blank(),
@@ -317,7 +388,7 @@ Figure9 <-
   theme_minimal() +
   scale_y_continuous(name = NULL, label = scales::percent) +
   scale_x_date(name = NULL) +
-  scale_colour_manual(values = c("#c9815f", "#6c8a84")) +
+  scale_colour_manual(values = c("#FFBC67", "#455C7B")) +
   theme(legend.position = "bottom")
 
 ggsave("output/Figure9.png", plot = Figure9, width = 8, height = 7, 
