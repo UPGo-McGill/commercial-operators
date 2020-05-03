@@ -125,10 +125,6 @@ nrow(filter(property, created <= end_date, scraped >= end_date,
   nrow(filter(property, created <= date_yoy_2015, scraped >= date_yoy_2015,
               listing_type == "Entire home/apt", housing == TRUE))
 
-# 2016-2019 FREH Growth
-#nrow(filter(FREH, date == end_date, FREH == TRUE)) /
-  #nrow(filter(FREH, date == "2016-01-01", FREH == TRUE))
-
 # 2019 YOY Growth
 nrow(filter(property, created <= end_date, scraped >= end_date,
             housing == TRUE)) / 
@@ -256,12 +252,46 @@ property %>%
 
 
 ## Top earning host(s)
-LTM_property %>% 
+host_revenue <- LTM_property %>% 
   group_by(host_ID) %>% 
   summarise(host_rev = sum(revenue)) %>% 
-  filter(host_rev>0) %>% 
   arrange(desc(host_rev))
 
+## Revenue of interview sample
+interviewed_revenue <- host_revenue %>% 
+  filter(host_ID == 43298240 | host_ID == 487327 | host_ID == 85530634 | host_ID == 43531 |
+           host_ID == 129749545 | host_ID == 182103998 | host_ID == 84463268 | host_ID == 126452184 |
+           host_ID == 683657 | host_ID == 93741077 | host_ID == 134010568 | host_ID == 126274289 | 
+           host_ID == 3758382 | host_ID == 1015379 | host_ID == 5180021 | host_ID == 195649860 |
+           host_ID == 6512090 | host_ID == 25284295 | host_ID == 3299104 | host_ID == 77816784 |
+           host_ID == 193770682 | host_ID == 1132399 | host_ID == 96593768)
+
+interviewed_revenue[is.na(interviewed_revenue)] <- 0
+
+sum(interviewed_revenue$host_rev)
+
+interviewed_revenue %>% 
+  pull(host_rev) %>% 
+  quantile() %>% 
+  as.list() %>% 
+  as_tibble() %>% 
+  select(-`0%`) %>% 
+  set_names(c("25th percentile", "Median", "75th percentile",
+              "100th percentile")) %>% 
+  mutate_all(round, -2)
+
+## Top 20% earners
+top_20pct <- LTM_property %>% 
+  group_by(host_ID) %>% 
+  summarise(host_rev = sum(revenue)) %>% 
+  filter(host_rev > quantile(host_rev, c(0.80), na.rm = TRUE)) %>% 
+  arrange(desc(host_rev)) %>% 
+  filter(host_ID == 43298240 | host_ID == 487327 | host_ID == 85530634 | host_ID == 43531 |
+           host_ID == 129749545 | host_ID == 182103998 | host_ID == 84463268 | host_ID == 126452184 |
+           host_ID == 683657 | host_ID == 93741077 | host_ID == 134010568 | host_ID == 126274289 | 
+           host_ID == 3758382 | host_ID == 1015379 | host_ID == 5180021 | host_ID == 195649860 |
+           host_ID == 6512090 | host_ID == 25284295 | host_ID == 3299104 | host_ID == 77816784 |
+           host_ID == 193770682 | host_ID == 1132399 | host_ID == 96593768)
 
 ## Multilistings
 ML_table <- 

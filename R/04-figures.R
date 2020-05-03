@@ -11,6 +11,7 @@ montreal <-
   get_census(
     dataset = "CA16",
     regions = list(CMA = "24462"),
+    vectors = "v_CA16_406",
     level = "CMA",
     geo_format = "sf") %>% 
   st_transform(32618)
@@ -24,6 +25,7 @@ CTs <-
     geo_format = "sf") %>% 
   st_transform(32618)
 
+names(CTs)[1] <- "area"
 names(CTs)[15] <- "density"
 names(CTs)[16] <- "occupied_dwellings"
 names(CTs)[17] <- "commute_total"
@@ -60,7 +62,7 @@ listings_mtl <-
 CTs <- 
   CTs %>% 
   right_join(listings_mtl) %>% 
-  select(GeoUID, dwellings = Dwellings, listings = n, geometry, density, commute_total, commute_transit,
+  select(area, GeoUID, dwellings = Dwellings, listings = n, geometry, density, commute_total, commute_transit,
          commute_walk, commute_bike, occupied_dwellings) %>% 
   st_simplify(preserveTopology = TRUE, dTolerance = 5)
 
@@ -68,10 +70,6 @@ font_import()
 
 boroughs <- st_read("Data/boroughs", "LIMADMIN")
 boroughs <- boroughs %>% 
-  st_transform(32618)
-
-boroughs_filtered <- boroughs %>% 
-  filter(NOM == "Le Plateau-Mont-Royal" | NOM == "Ville-Marie") %>% 
   st_transform(32618)
 
 Figure1 <-
@@ -102,11 +100,17 @@ ggsave("Output/Figure1.png", plot = Figure1, width = 6,
 
 ### Figure 2 - Map: Density by census tract at Island extent ##########################
 
+boroughs <-
+  boroughs %>% 
+  st_join(CTs, join = st_intersects, left = T) %>% 
+  group_by(NOM) %>% 
+  summarise(borough_density = mean(density), borough_area = sum(area))
+
 Figure2 <- 
-  CTs %>% 
+  boroughs %>% 
   ggplot() +
   geom_sf(
-    aes(fill = density),
+    aes(fill = borough_density),
     lwd = 0,
     colour = "white"
   ) +
