@@ -7,9 +7,15 @@ load("Data/Montreal_data.Rdata")
 ### Prepare data ###############################################################
 
 # Set up dates
-start_date <- "2019-01-01"
-end_date <- "2019-12-31"
+start_2019 <- "2019-01-01"
+end_2019 <- "2019-12-31"
 july_2019 <- "2019-07-01"
+
+end_2018 <- "2018-12-31"
+end_2017 <- "2017-12-31"
+end_2016 <- "2016-12-31"
+start_2016 <- "2016-01-01"
+end_2015 <- "2015-12-31"
 
 # Exchange rate (average over last twelve months)
 exchange_rate <- mean(1.3301, 1.3201, 1.3365,
@@ -25,10 +31,9 @@ property <-
   summarize(revenue = sum(price)) %>% 
   left_join(property, .)
 
-# Create last twelve months property file
-
+# Create 2019 property file
 LTM_property <- property %>% 
-  filter(created <= end_date, scraped >= start_date, housing == TRUE)
+  filter(created <= end_2019, scraped >= start_2019, housing == TRUE)
 
 ### Active daily listings ######################################################
 
@@ -42,17 +47,32 @@ active_listings <-
 
 ## Active listings from property file
 # All housing listings on Dec 31, 2019
-nrow(filter(property, created <= end_date, scraped >= end_date, housing == TRUE))
+nrow(filter(property, created <= end_2019, scraped >= end_2019, housing == TRUE))
 
 # Peak active listings in 2019
 active_listings %>% 
-  filter(date >= start_date) %>% 
+  filter(date >= start_2019) %>% 
+  arrange(desc(n))
+
+# Peak in 2018
+active_listings %>% 
+  filter(date > end_2017, date <= end_2018) %>% 
+  arrange(desc(n))
+
+#Peak in 2017
+active_listings %>% 
+  filter(date > end_2016, date <= end_2017) %>% 
+  arrange(desc(n))
+
+#Peak in 2016
+active_listings %>% 
+  filter(date > end_2015, date <= end_2016) %>% 
   arrange(desc(n))
 
 # Housing listings over the last twelve months
 nrow(LTM_property)
 
-# Listing type breakdown
+# Listing type breakdown on July 1, 2019
 nrow(filter(property, created <= july_2019, scraped >= july_2019, listing_type == "Entire home/apt"))/
   nrow(filter(property, created <= july_2019, scraped >= july_2019))
 
@@ -99,60 +119,47 @@ borough_listings_LTM <-
   arrange(desc(n))
 
 
-### How many listings were FREHs? ######################################################
+### How many listings were FREHs? (July 1, 2019) ######################################################
 
-nrow(filter(FREH, date == "2019-07-01", FREH == TRUE))
+nrow(filter(FREH, date == july_2019, FREH == TRUE))
 
 
 ### Growth over time #########################################################
 
-# Set dates
-date_yoy_2019 <- "2018-12-31"
-date_yoy_2018 <- "2017-12-31"
-date_yoy_2017 <- "2016-12-31"
-date_yoy_2016 <- "2016-01-01"
-date_yoy_2015 <- "2014-12-31"
-
 # 2016-2019 Growth
-nrow(filter(property, created <= end_date, scraped >= end_date,
+nrow(filter(property, created <= end_2019, scraped >= end_2019,
             housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2016, scraped >= date_yoy_2016,
+  nrow(filter(property, created <= start_2016, scraped >= start_2016,
               housing == TRUE))
 
-# 2015-2019 EH Growth
-nrow(filter(property, created <= end_date, scraped >= end_date,
+# 2016-2019 EH Growth
+nrow(filter(property, created <= end_2019, scraped >= end_2019,
             listing_type == "Entire home/apt",  housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2015, scraped >= date_yoy_2015,
+  nrow(filter(property, created <= start_2016, scraped >= start_2016,
               listing_type == "Entire home/apt", housing == TRUE))
 
 # 2019 YOY Growth
-nrow(filter(property, created <= end_date, scraped >= end_date,
+nrow(filter(property, created <= end_2019, scraped >= end_2019,
             housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2019, scraped >= date_yoy_2019,
+  nrow(filter(property, created <= end_2018, scraped >= end_2018,
               housing == TRUE))
 
 # 2018 YOY Growth
-nrow(filter(property, created <= date_yoy_2019, scraped >= date_yoy_2019,
+nrow(filter(property, created <= end_2018, scraped >= end_2018,
             housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2018, scraped >= date_yoy_2018,
+  nrow(filter(property, created <= end_2017, scraped >= end_2017,
               housing == TRUE))
 
 # 2017 YOY Growth
-nrow(filter(property, created <= date_yoy_2018, scraped >= date_yoy_2018,
+nrow(filter(property, created <= end_2017, scraped >= end_2017,
             housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2017, scraped >= date_yoy_2017,
+  nrow(filter(property, created <= end_2016, scraped >= end_2016,
               housing == TRUE))
 
 # 2016 YOY Growth
-nrow(filter(property, created <= date_yoy_2017, scraped >= date_yoy_2017,
+nrow(filter(property, created <= end_2016, scraped >= end_2016,
             housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2016, scraped >= date_yoy_2016,
-              housing == TRUE))
-
-# 2015 YOY Growth
-nrow(filter(property, created <= date_yoy_2016, scraped >= date_yoy_2016,
-            housing == TRUE)) / 
-  nrow(filter(property, created <= date_yoy_2015, scraped >= date_yoy_2015,
+  nrow(filter(property, created <= end_2015, scraped >= end_2015,
               housing == TRUE))
 
 
@@ -161,7 +168,7 @@ nrow(filter(property, created <= date_yoy_2016, scraped >= date_yoy_2016,
 property %>% 
   filter(housing == TRUE) %>% 
   rename(`Listing type` = listing_type) %>% 
-  filter(created <= end_date, scraped >= end_date) %>% 
+  filter(created <= end_2019, scraped >= end_2019) %>% 
   group_by(`Listing type`) %>% 
   summarize(`Number of listings` = n(),
             `Annual revenue` = sum(revenue, na.rm = TRUE),
@@ -185,7 +192,7 @@ property %>%
 ### Bedroom breakdown ##########################################################
 
 property %>% 
-  filter(created <= end_date, scraped >= end_date, housing == TRUE,
+  filter(created <= end_2019, scraped >= end_2019, housing == TRUE,
          listing_type == "Entire home/apt") %>% 
   count(bedrooms) %>% 
   mutate(percentage = n / sum(n))
@@ -203,7 +210,7 @@ filter(LTM_property, listing_type == "Entire home/apt") %>%
 
 ## Host revenue percentiles (2019)
 daily %>%
-  filter(housing == TRUE, date >= start_date, status == "R") %>%
+  filter(housing == TRUE, date >= start_2019, status == "R") %>%
   group_by(host_ID) %>%
   summarize(rev = sum(price)*exchange_rate) %>%
   filter(rev > 0) %>%
@@ -215,7 +222,7 @@ daily %>%
 
 ## Host revenue percentiles (2016)
 daily %>% 
-  filter(housing == TRUE, date >= date_yoy_2016, date <= date_yoy_2017, status == "R") %>% 
+  filter(housing == TRUE, date >= end_2015, date <= end_2016, status == "R") %>% 
   group_by(host_ID) %>% 
   summarise(rev = sum(price)*exchange_rate) %>% 
   filter(rev > 0) %>% 
@@ -239,7 +246,7 @@ LTM_property %>%
 
 ## Median host income (2016)
 property %>% 
-  filter(created <= date_yoy_2017, scraped >= date_yoy_2016, housing == TRUE) %>% 
+  filter(created <= end_2016, scraped >= end_2015, housing == TRUE) %>% 
   filter(revenue > 0) %>% 
   pull(revenue) %>% 
   quantile() %>% 
@@ -303,19 +310,19 @@ ML_table <-
   gather(Listings, Revenue, key = `Multilisting percentage`, value = Value)
 
 ML_table %>% 
-  filter(date == end_date)
+  filter(date == end_2019)
 
 # Entire home multilistings
 daily %>% 
   filter(listing_type == "Entire home/apt") %>% 
   group_by(date) %>% 
   summarize(Listings = sum(multi)) %>% 
-  filter(date == end_date)
+  filter(date == end_2019)
 
 ### Housing loss ###############################################################
 
 FREH %>% 
-  filter(date == end_date, FREH == T) %>% 
+  filter(date == end_2019, FREH == T) %>% 
   count()
 
 FREH %>% 
