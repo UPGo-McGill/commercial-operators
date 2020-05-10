@@ -4,6 +4,8 @@ source("R/01-helper_functions.R")
 source("R/02-data_import.R")
 load("Data/Montreal_data.Rdata")
 
+rm(GH)
+
 ### Prepare data ###############################################################
 
 # Set up dates
@@ -15,6 +17,7 @@ end_2018 <- "2018-12-31"
 end_2017 <- "2017-12-31"
 end_2016 <- "2016-12-31"
 start_2016 <- "2016-01-01"
+july_2016 <- "2016-07-01"
 end_2015 <- "2015-12-31"
 
 # Exchange rate (average over last twelve months)
@@ -165,10 +168,36 @@ nrow(filter(property, created <= end_2016, scraped >= end_2016,
 
 ### Listing type prevalence ####################################################
 
-property %>% 
+share_19 <- 
+  property %>% 
   filter(housing == TRUE) %>% 
   rename(`Listing type` = listing_type) %>% 
   filter(created <= end_2019, scraped >= end_2019) %>% 
+  group_by(`Listing type`) %>% 
+  summarize(`Number of listings` = n(),
+            `Annual revenue` = sum(revenue, na.rm = TRUE),
+            `Rev. per listing` = `Annual revenue` / n()) %>% 
+  mutate(
+    `% of all listings` = round(`Number of listings` /
+                                  sum(`Number of listings`), 3),
+    `% of all listings` = paste0(100 * `% of all listings`, "%"),
+    `% of annual revenue` = `Annual revenue` / sum(`Annual revenue`)) %>% 
+  mutate(
+    `Annual revenue` = round(`Annual revenue`),
+    `Annual revenue` = paste0("$", str_sub(`Annual revenue`, 1, -7), ".",
+                              str_sub(`Annual revenue`, -6, -6), " million"),
+    `% of annual revenue` = round(`% of annual revenue`, 3),
+    `% of annual revenue` = paste0(100 * `% of annual revenue`, "%"),
+    `Rev. per listing` = round(`Rev. per listing`),
+    `Rev. per listing` = paste0("$", str_sub(`Rev. per listing`, 1, -4),
+                                ",", str_sub(`Rev. per listing`, -3, -1))
+  ) %>% view()
+
+share_16 <- 
+  property %>% 
+  filter(housing == TRUE) %>% 
+  rename(`Listing type` = listing_type) %>% 
+  filter(created <= start_2016, scraped >= end_2016) %>% 
   group_by(`Listing type`) %>% 
   summarize(`Number of listings` = n(),
             `Annual revenue` = sum(revenue, na.rm = TRUE),
@@ -404,12 +433,10 @@ res_length <-
 
 mean(res_length$nights)
 
-### Listings likely in violation of principal residence requirement ############
-
 ## LFRML calculations
 
 # Add ML field to property file
-property <- 
+property_HL <- 
   daily %>% 
   filter(date == end_2019) %>% 
   select(property_ID, multi) %>% 
@@ -417,23 +444,23 @@ property <-
   mutate(multi = if_else(is.na(multi), FALSE, multi))
 
 # Add n_reserved and n_available fields
-property <- 
+property_HL <- 
   daily %>% 
   filter(status == "R") %>% 
   group_by(property_ID) %>% 
   summarize(n_reserved = n()) %>% 
-  left_join(property, .)
+  left_join(property_HL, .)
 
-property <- 
+property_HL <- 
   daily %>% 
   filter(status == "R" | status == "A") %>% 
   group_by(property_ID) %>% 
   summarize(n_available = n()) %>% 
-  left_join(property, .)
+  left_join(property_HL, .)
 
 # Add LFRML field
-property <- 
-  property %>%
+property_HL <- 
+  property_HL %>%
   group_by(host_ID, listing_type) %>% 
   mutate(LFRML = case_when(
     listing_type != "Entire home/apt" ~ FALSE,
@@ -443,8 +470,8 @@ property <-
   ungroup()
 
 # Resolve ties
-property <- 
-  property %>% 
+property_HL <- 
+  property_HL %>% 
   group_by(host_ID, listing_type) %>% 
   mutate(prob = sample(0:10000, n(), replace = TRUE),
          LFRML = if_else(
@@ -456,38 +483,45 @@ GH_list <-
   GH %>% 
   filter(date == end_2019)
 
-property <-
-  property %>%
+property_HL <-
+  property_HL %>%
   mutate(GH = if_else(property_ID %in% GH_list, TRUE, FALSE))
 
 # Add FREH status
-property <- 
+property_HL <- 
   FREH %>% 
   filter(date == end_2019) %>% 
   mutate(FREH = TRUE) %>% 
-  left_join(property, .) %>% 
+  left_join(property_HL, .) %>% 
   mutate(FREH = if_else(is.na(FREH), FALSE, FREH))
 
-# Add Legal field
-legal <- 
-  property %>%
-  filter(housing == TRUE, created <= end_2019, scraped >= end_2019) %>% 
-  mutate(legal = case_when(
-    GH == TRUE                     ~ FALSE,
-    listing_type == "Shared room"  ~ TRUE,
-    listing_type == "Private room" ~ TRUE,
-    FREH == TRUE                   ~ FALSE,
-    LFRML == TRUE                  ~ TRUE,
-    multi == TRUE                  ~ FALSE,
-    TRUE                           ~ TRUE))
+property_HL %>% 
+  filter(FREH == TRUE)
 
-mean(legal$FREH, na.rm = TRUE)
-mean(legal$GH, na.rm = TRUE)
-mean(legal$LFRML, na.rm = TRUE)
-mean(legal$multi, na.rm = TRUE)
-mean(legal$legal, na.rm = TRUE)
+# FREH listings in 2016
 
-# Legal by neighbourhood
-legal %>% 
-  group_by(neighbourhood) %>% 
-  summarize(non_PR = length(legal[legal == FALSE]))
+nrow(filter(property_HL, created <= july_2016, scraped >= july_2016,
+            FREH == TRUE, housing == TRUE))/
+  nrow(filter(property, created <= july_2016, scraped >= july_2016, 
+              housing == TRUE))
+
+nrow(filter(daily, date == july_2016, housing.x == TRUE))
+
+# FREH Listings in 2019
+
+nrow(filter(property_HL, created <= july_2019, scraped >= july_2019,
+              FREH == TRUE, housing == TRUE))/
+  nrow(filter(property, created <= july_2019, scraped >= july_2019,
+              housing == TRUE))
+
+# Avg nightly rates
+
+daily %>% 
+  filter(date == july_2016, housing.x == TRUE) %>% 
+  pull(price) %>% 
+  median()
+
+daily %>% 
+  filter(date == july_2019, housing.x == TRUE) %>% 
+  pull(price) %>% 
+  median()

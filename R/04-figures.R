@@ -48,7 +48,7 @@ streets <-
 
 streets <- 
   streets %>% st_join(montreal["geometry"],
-                      join = st_within, left = FALSE)
+                      join = st_within, left = TRUE)
 
 ### Figure 1 - Map: Spatial distribution of listings at CMA extent ####################
 
@@ -65,12 +65,6 @@ CTs <-
   select(area, GeoUID, dwellings = Dwellings, listings = n, geometry, density, commute_total, commute_transit,
          commute_walk, commute_bike, occupied_dwellings) %>% 
   st_simplify(preserveTopology = TRUE, dTolerance = 5)
-
-font_import()
-
-boroughs <- st_read("Data/boroughs", "LIMADMIN")
-boroughs <- boroughs %>% 
-  st_transform(32618)
 
 Figure1 <-
   CTs %>% 
@@ -100,8 +94,11 @@ ggsave("Output/Figure1.png", plot = Figure1, width = 6,
 
 ### Figure 2 - Map: Density by census tract at Island extent ##########################
 
+boroughs <- st_read("Data/boroughs", "LIMADMIN")
+
 boroughs <-
-  boroughs %>% 
+  boroughs %>%
+  st_transform(32618) %>% 
   st_join(CTs, join = st_intersects, left = T) %>% 
   group_by(NOM) %>% 
   summarise(borough_density = mean(density), borough_area = sum(area))
@@ -262,7 +259,7 @@ property_2018 <-
 
 property_2019 <- 
   daily %>% 
-  filter(status == "R", date >= start_date, date <= end_date) %>% 
+  filter(status == "R", date >= start_2019, date <= end_2019) %>% 
   group_by(property_ID) %>% 
   summarize(revenue = sum(price) * exchange_rate) %>% 
   left_join(filter(property_in_montreal, housing == TRUE), .) %>% 
