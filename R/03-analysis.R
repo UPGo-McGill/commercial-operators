@@ -172,7 +172,7 @@ share_19 <-
   property %>% 
   filter(housing == TRUE) %>% 
   rename(`Listing type` = listing_type) %>% 
-  filter(created <= end_2019, scraped >= end_2019) %>% 
+  filter(created <= july_2019, scraped >= july_2019) %>% 
   group_by(`Listing type`) %>% 
   summarize(`Number of listings` = n(),
             `Annual revenue` = sum(revenue, na.rm = TRUE),
@@ -221,7 +221,7 @@ share_16 <-
 ### Bedroom breakdown ##########################################################
 
 property %>% 
-  filter(created <= end_2019, scraped >= end_2019, housing == TRUE,
+  filter(created <= july_2019, scraped >= july_2019, housing == TRUE,
          listing_type == "Entire home/apt") %>% 
   count(bedrooms) %>% 
   mutate(percentage = n / sum(n))
@@ -351,7 +351,7 @@ daily %>%
 ### Housing loss ###############################################################
 
 FREH %>% 
-  filter(date == end_2019, FREH == T) %>% 
+  filter(date == july_2019, FREH == T) %>% 
   count()
 
 FREH %>% 
@@ -391,7 +391,7 @@ housing_loss <-
          value = `Housing units`)
 
 # Current housing loss figure
-sum(filter(housing_loss, date == end_2019)$`Housing units`)
+sum(filter(housing_loss, date == july_2019)$`Housing units`)
 
 # YOY increase
 sum(filter(housing_loss, date == end_2019)$`Housing units`) /
@@ -411,27 +411,6 @@ housing %>%
   set_names(c("Dwellings", "Tenants")) %>% 
   pull(Tenants) %>% 
   {. * vacancy_rate * (vacancy_rate - 1)}
-
-### Number of long reservations
-
-daily <- left_join(daily, property, by = "property_ID")
-
-daily <- daily %>% 
-  select(1:13, 18:19)
-
-long_reservations <- 
-  daily %>% 
-  filter(status == "R") %>% 
-  filter(start_2019 >= created, end_2019 <= scraped + 30) %>% 
-  group_by(res_ID)
-
-res_length <- 
-  long_reservations %>%
-  group_by(res_ID) %>% 
-  summarize(nights = max(date) - min(date) + 1) %>% 
-  filter(nights >= 28)
-
-mean(res_length$nights)
 
 ## LFRML calculations
 
@@ -481,7 +460,7 @@ property_HL <-
 # Add GH status
 GH_list <-
   GH %>% 
-  filter(date == end_2019)
+  filter(date == july_2019)
 
 property_HL <-
   property_HL %>%
@@ -514,7 +493,7 @@ nrow(filter(property_HL, created <= july_2019, scraped >= july_2019,
   nrow(filter(property, created <= july_2019, scraped >= july_2019,
               housing == TRUE))
 
-# Avg nightly rates
+# Med nightly rates
 
 daily %>% 
   filter(date == july_2016, housing.x == TRUE) %>% 
