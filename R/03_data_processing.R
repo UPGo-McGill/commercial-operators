@@ -1,10 +1,13 @@
-### 3 - MONTREAL DATA ANALYSIS #################################################
+#### DATA PROCESSING ###########################################################
 
-source("R/01-helper_functions.R")
+source("R/01_startup.R")
 source("R/02-data_import.R")
-load("Data/Montreal_data.Rdata")
+qload("output/data.qsm", nthreads = availableCores())
 
-rm(GH)
+
+
+
+
 
 ### Prepare data ###############################################################
 
