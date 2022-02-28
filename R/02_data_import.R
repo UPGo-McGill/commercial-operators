@@ -28,7 +28,7 @@ upgo_disconnect()
 # Prepare data ------------------------------------------------------------
 
 daily <- strr_expand(daily)
-host <- strr_expand(host)
+host <- strr_expand(host) |> as_tibble()
 daily <- strr_multi(daily, host)
 FREH <- strr_FREH(daily, "2015-01-01", "2019-12-31")
 GH <- strr_ghost(strr_as_sf(property, 32618), "2015-01-01", "2019-12-31")
