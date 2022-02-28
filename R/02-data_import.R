@@ -27,25 +27,11 @@ upgo_disconnect()
 
 ### Prepare data ###############################################################
 
-daily <- 
-  daily %>% 
-  strr_expand()
+daily <- strr_expand(daily)
+host <- strr_expand(host)
+daily <- strr_multi(daily, host)
+FREH <- strr_FREH(daily, "2015-01-01", "2019-12-31")
+GH <- strr_ghost(strr_as_sf(property, 32618), "2015-01-01", "2019-12-31")
 
-host <- 
-  host %>% 
-  strr_expand()
-
-daily <- 
-  daily %>% 
-  strr_multi(host)
-
-FREH <- 
-  daily %>% 
-  strr_FREH("2015-01-01", "2019-12-31")
-
-GH <- 
-  property %>% 
-  strr_as_sf(32618) %>% 
-  strr_ghost("2015-01-01", "2019-12-31")
-
-save(property, daily, host, FREH, GH, file = "Montreal_data.Rdata")
+qsavem(property, daily, host, FREH, GH, file = "output/data.qsm",
+       nthreads = availableCores())
