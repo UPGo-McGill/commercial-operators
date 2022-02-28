@@ -1,24 +1,25 @@
-#### 2 - MONTREAL ANALYSIS DATA IMPORT #########################################################
+#### DATA IMPORT ###############################################################
 
-source("R/01-helper_functions.R")
+source("R/01_startup.R")
 
-### Import data ################################################################
+
+# Import data -------------------------------------------------------------
 
 upgo_connect()
 
 property <- 
-  property_all %>% 
-  filter(country == "Canada", city == "Montreal") %>% 
+  property_remote |> 
+  filter(country == "Canada", city == "Montreal") |> 
   collect()
 
 daily <- 
-  daily_all %>% 
-  filter(property_ID %in% !! property$property_ID) %>% 
+  daily_remote |> 
+  filter(property_ID %in% !!property$property_ID, start_date <= "2019-12-31") |> 
   collect()
 
 host <- 
-  host_all %>% 
-  filter(host_ID %in% !! property$host_ID) %>% 
+  host_remote |> 
+  filter(host_ID %in% !!property$host_ID, start_date <= "2019-12-31") |> 
   collect()
 
 upgo_disconnect()
