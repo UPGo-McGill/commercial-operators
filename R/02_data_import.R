@@ -25,7 +25,7 @@ host <-
 upgo_disconnect()
 
 
-### Prepare data ###############################################################
+# Prepare data ------------------------------------------------------------
 
 daily <- strr_expand(daily)
 host <- strr_expand(host)
