@@ -43,11 +43,6 @@ ggsave("output/figure_1.png", figure_1, width = 8, height = 6)
 
 library(patchwork)
 
-province <- 
-  get_census("CA16", regions = list(PR = "24"), geo_format = "sf") |> 
-  st_transform(32618) |> 
-  select(geometry)
-
 active_map <- 
   daily |> 
   filter(date >= "2019-01-01", status %in% c("A", "R")) |> 
