@@ -6,3 +6,5 @@
 
 .DS_Store
 data/.DS_Store
+output/.DS_Store
+output/data.qsm
