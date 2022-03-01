@@ -5,8 +5,25 @@ source("R/02-data_import.R")
 qload("output/data.qsm", nthreads = availableCores())
 
 
+# Get census data ---------------------------------------------------------
+
+CT <- cancensus::get_census(dataset = "CA16", 
+                            regions = list(CSD = c("2466023")), 
+                            level = "CT", geo_format = "sf") |> 
+  st_transform(32618)
+    
+
+# Join STR data to census -------------------------------------------------
+
+property <- 
+  property |> 
+  strr_as_sf(32618) |> 
+  strr_raffle(CT, GeoUID, units = Dwellings)
 
 
+property <- 
+  property |> 
+  select(-.grid_ID)
 
 
 ### Prepare data ###############################################################
